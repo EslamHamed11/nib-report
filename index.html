@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>تقرير مؤشر الأداء الزمني لحالات الاختبار</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0e1a;
+    --surface: #111827;
+    --surface2: #1a2235;
+    --border: #1e2d45;
+    --accent: #0ea5e9;
+    --accent2: #38bdf8;
+    --green: #10b981;
+    --yellow: #f59e0b;
+    --red: #ef4444;
+    --text: #e2e8f0;
+    --text-muted: #64748b;
+    --text-dim: #94a3b8;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Cairo', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    direction: rtl;
+  }
+
+  /* Setup Screen */
+  #setup-screen {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 2rem;
+  }
+
+  .setup-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 2.5rem;
+    width: 100%;
+    max-width: 480px;
+    box-shadow: 0 25px 60px rgba(0,0,0,0.5);
+  }
+
+  .setup-logo {
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+
+  .setup-logo h1 {
+    font-size: 1.5rem;
+    font-weight: 900;
+    color: var(--accent);
+    letter-spacing: -0.5px;
+  }
+
+  .setup-logo p {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-top: 0.4rem;
+  }
+
+  .form-group {
+    margin-bottom: 1.2rem;
+  }
+
+  label {
+    display: block;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text-dim);
+    margin-bottom: 0.4rem;
+    text-align: right;
+  }
+
+  input {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.7rem 1rem;
+    color: var(--text);
+    font-family: 'Cairo', sans-serif;
+    font-size: 0.9rem;
+    direction: ltr;
+    text-align: left;
+    transition: border-color 0.2s;
+  }
+
+  input:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+
+  .help-text {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-top: 0.3rem;
+    text-align: right;
+  }
+
+  .help-text a { color: var(--accent); }
+
+  .btn-primary {
+    width: 100%;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 0.85rem;
+    font-family: 'Cairo', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    margin-top: 0.5rem;
+    transition: background 0.2s, transform 0.1s;
+  }
+
+  .btn-primary:hover { background: var(--accent2); }
+  .btn-primary:active { transform: scale(0.98); }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* Dashboard */
+  #dashboard { display: none; padding: 1.5rem; }
+
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .header-title h1 {
+    font-size: 1.4rem;
+    font-weight: 900;
+    color: var(--text);
+  }
+
+  .header-title p {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-top: 0.2rem;
+  }
+
+  .header-actions {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+  }
+
+  .btn-refresh {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 8px;
+    padding: 0.6rem 1.2rem;
+    font-family: 'Cairo', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  .btn-refresh:hover { border-color: var(--accent); color: var(--accent); }
+
+  .last-updated {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    background: var(--surface2);
+    padding: 0.4rem 0.8rem;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+  }
+
+  /* Stats */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.2rem;
+    text-align: center;
+  }
+
+  .stat-value {
+    font-size: 2rem;
+    font-weight: 900;
+    color: var(--accent);
+    line-height: 1;
+  }
+
+  .stat-label {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    margin-top: 0.4rem;
+  }
+
+  /* Filters */
+  .filters {
+    display: flex;
+    gap: 0.75rem;
+    margin-bottom: 1.2rem;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .filter-btn {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    border-radius: 20px;
+    padding: 0.4rem 1rem;
+    font-family: 'Cairo', sans-serif;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .filter-btn.active, .filter-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(14, 165, 233, 0.1);
+  }
+
+  /* Table */
+  .table-wrapper {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    direction: rtl;
+  }
+
+  thead tr {
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+  }
+
+  th {
+    padding: 0.9rem 1.2rem;
+    text-align: right;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+  }
+
+  tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background 0.15s;
+  }
+
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: var(--surface2); }
+
+  td {
+    padding: 0.85rem 1.2rem;
+    font-size: 0.88rem;
+    vertical-align: middle;
+  }
+
+  .ticket-key {
+    color: var(--accent);
+    font-weight: 700;
+    font-size: 0.82rem;
+    white-space: nowrap;
+  }
+
+  .summary-text {
+    max-width: 280px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--text);
+  }
+
+  .status-badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .status-assign { background: rgba(245,158,11,0.15); color: #fbbf24; border: 1px solid rgba(245,158,11,0.3); }
+  .status-review { background: rgba(14,165,233,0.15); color: #38bdf8; border: 1px solid rgba(14,165,233,0.3); }
+  .status-rejected { background: rgba(239,68,68,0.15); color: #f87171; border: 1px solid rgba(239,68,68,0.3); }
+  .status-default { background: rgba(148,163,184,0.1); color: #94a3b8; border: 1px solid rgba(148,163,184,0.2); }
+
+  .time-cell {
+    font-weight: 700;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .time-high { color: var(--red); }
+  .time-medium { color: var(--yellow); }
+  .time-low { color: var(--green); }
+
+  /* Loading */
+  .loading {
+    text-align: center;
+    padding: 4rem;
+    color: var(--text-muted);
+  }
+
+  .spinner {
+    width: 36px;
+    height: 36px;
+    border: 3px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto 1rem;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .error-msg {
+    background: rgba(239,68,68,0.1);
+    border: 1px solid rgba(239,68,68,0.3);
+    color: #f87171;
+    border-radius: 8px;
+    padding: 1rem 1.5rem;
+    margin: 1rem 0;
+    font-size: 0.88rem;
+    text-align: right;
+  }
+
+  .empty-msg {
+    text-align: center;
+    padding: 3rem;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+  }
+</style>
+</head>
+<body>
+
+<!-- Setup Screen -->
+<div id="setup-screen">
+  <div class="setup-card">
+    <div class="setup-logo">
+      <h1>تقرير مؤشر الأداء الزمني</h1>
+      <p>NIB 60 — حالات الاختبار</p>
+    </div>
+
+    <div class="form-group">
+      <label>رابط Jira</label>
+      <input type="text" id="jira-url" placeholder="https://nib-team-jira.atlassian.net" value="https://nib-team-jira.atlassian.net">
+    </div>
+
+    <div class="form-group">
+      <label>البريد الإلكتروني</label>
+      <input type="email" id="jira-email" placeholder="your@email.com">
+    </div>
+
+    <div class="form-group">
+      <label>API Token</label>
+      <input type="password" id="jira-token" placeholder="API Token">
+      <p class="help-text">
+        احصل على التوكن من:
+        <a href="https://id.atlassian.com/manage-profile/security/api-tokens" target="_blank">id.atlassian.com</a>
+      </p>
+    </div>
+
+    <div class="form-group">
+      <label>JQL (الفلتر)</label>
+      <input type="text" id="jira-jql" value="project = 'NIB 60'" placeholder="project = 'NIB 60'">
+    </div>
+
+    <div id="setup-error"></div>
+
+    <button class="btn-primary" id="connect-btn" onclick="connect()">تحميل التقرير</button>
+  </div>
+</div>
+
+<!-- Dashboard -->
+<div id="dashboard">
+  <div class="header">
+    <div class="header-title">
+      <h1>تقرير مؤشر الأداء الزمني لحالات الاختبار</h1>
+      <p id="last-updated-text">جارٍ التحميل...</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn-refresh" onclick="loadData()">↻ تحديث</button>
+      <button class="btn-refresh" onclick="goBack()">⚙ الإعدادات</button>
+    </div>
+  </div>
+
+  <div class="stats" id="stats-row"></div>
+
+  <div class="filters">
+    <span style="font-size:0.8rem;color:var(--text-muted);">فلتر:</span>
+    <button class="filter-btn active" onclick="setFilter('all', this)">الكل</button>
+    <button class="filter-btn" onclick="setFilter('high', this)">+ 30 يوم</button>
+    <button class="filter-btn" onclick="setFilter('medium', this)">7–30 يوم</button>
+    <button class="filter-btn" onclick="setFilter('low', this)">أقل من 7 أيام</button>
+  </div>
+
+  <div id="error-container"></div>
+
+  <div class="table-wrapper">
+    <div id="loading" class="loading">
+      <div class="spinner"></div>
+      <p>جارٍ تحميل البيانات...</p>
+    </div>
+    <table id="report-table" style="display:none">
+      <thead>
+        <tr>
+          <th>رقم التذكرة</th>
+          <th>الموضوع</th>
+          <th>الحالة الراهنة</th>
+          <th>مدة البقاء في الحالة</th>
+        </tr>
+      </thead>
+      <tbody id="table-body"></tbody>
+    </table>
+    <div id="empty-msg" class="empty-msg" style="display:none">لا توجد بيانات</div>
+  </div>
+</div>
+
+<script>
+let allIssues = [];
+let currentFilter = 'all';
+let config = {};
+
+function connect() {
+  const url = document.getElementById('jira-url').value.trim().replace(/\/$/, '');
+  const email = document.getElementById('jira-email').value.trim();
+  const token = document.getElementById('jira-token').value.trim();
+  const jql = document.getElementById('jira-jql').value.trim();
+
+  if (!url || !email || !token || !jql) {
+    showSetupError('يرجى ملء جميع الحقول');
+    return;
+  }
+
+  config = { url, email, token, jql };
+  localStorage.setItem('jira_config', JSON.stringify(config));
+
+  document.getElementById('setup-screen').style.display = 'none';
+  document.getElementById('dashboard').style.display = 'block';
+  loadData();
+}
+
+function goBack() {
+  document.getElementById('dashboard').style.display = 'none';
+  document.getElementById('setup-screen').style.display = 'flex';
+}
+
+function showSetupError(msg) {
+  document.getElementById('setup-error').innerHTML = `<div class="error-msg">${msg}</div>`;
+}
+
+async function loadData() {
+  document.getElementById('loading').style.display = 'block';
+  document.getElementById('report-table').style.display = 'none';
+  document.getElementById('empty-msg').style.display = 'none';
+  document.getElementById('error-container').innerHTML = '';
+
+  const auth = btoa(`${config.email}:${config.token}`);
+  const encodedJql = encodeURIComponent(config.jql);
+  const url = `${config.url}/rest/api/3/search/jql?jql=${encodedJql}&maxResults=100&expand=changelog&fields=summary,status,created`;
+
+  try {
+    const resp = await fetch(url, {
+      headers: {
+        'Authorization': `Basic ${auth}`,
+        'Accept': 'application/json'
+      }
+    });
+
+    if (!resp.ok) throw new Error(`خطأ ${resp.status}: ${resp.statusText}`);
+
+    const data = await resp.json();
+    allIssues = processIssues(data.issues);
+    renderTable(allIssues);
+    renderStats(allIssues);
+
+    const now = new Date();
+    document.getElementById('last-updated-text').textContent =
+      `آخر تحديث: ${now.toLocaleDateString('ar-EG')} ${now.toLocaleTimeString('ar-EG')}`;
+
+  } catch (err) {
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('error-container').innerHTML =
+      `<div class="error-msg">⚠ ${err.message}</div>`;
+  }
+}
+
+function processIssues(issues) {
+  const sdf = (str) => new Date(str).getTime();
+  const now = Date.now();
+
+  return issues.map(issue => {
+    let lastChange = sdf(issue.fields.created);
+
+    (issue.changelog?.histories || []).forEach(history => {
+      history.items.forEach(item => {
+        if (item.field === 'status') {
+          const t = sdf(history.created);
+          if (t > lastChange) lastChange = t;
+        }
+      });
+    });
+
+    const diff = now - lastChange;
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+
+    return {
+      key: issue.key,
+      summary: issue.fields.summary,
+      status: issue.fields.status.name,
+      days, hours, minutes,
+      totalMinutes: Math.floor(diff / 60000)
+    };
+  }).sort((a, b) => b.totalMinutes - a.totalMinutes);
+}
+
+function getStatusClass(status) {
+  const s = status.toLowerCase();
+  if (s.includes('assign')) return 'status-assign';
+  if (s.includes('مراجعة') || s.includes('review')) return 'status-review';
+  if (s.includes('مرفوض') || s.includes('reject')) return 'status-rejected';
+  return 'status-default';
+}
+
+function getTimeClass(days) {
+  if (days >= 30) return 'time-high';
+  if (days >= 7) return 'time-medium';
+  return 'time-low';
+}
+
+function setFilter(filter, btn) {
+  currentFilter = filter;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderTable(allIssues);
+}
+
+function renderTable(issues) {
+  document.getElementById('loading').style.display = 'none';
+
+  let filtered = issues;
+  if (currentFilter === 'high') filtered = issues.filter(i => i.days >= 30);
+  else if (currentFilter === 'medium') filtered = issues.filter(i => i.days >= 7 && i.days < 30);
+  else if (currentFilter === 'low') filtered = issues.filter(i => i.days < 7);
+
+  if (filtered.length === 0) {
+    document.getElementById('report-table').style.display = 'none';
+    document.getElementById('empty-msg').style.display = 'block';
+    return;
+  }
+
+  const tbody = document.getElementById('table-body');
+  tbody.innerHTML = filtered.map(i => `
+    <tr>
+      <td><span class="ticket-key">${i.key}</span></td>
+      <td><div class="summary-text" title="${i.summary}">${i.summary}</div></td>
+      <td><span class="status-badge ${getStatusClass(i.status)}">${i.status}</span></td>
+      <td><span class="time-cell ${getTimeClass(i.days)}">${i.days}d ${i.hours}h ${i.minutes}m</span></td>
+    </tr>
+  `).join('');
+
+  document.getElementById('report-table').style.display = 'table';
+  document.getElementById('empty-msg').style.display = 'none';
+}
+
+function renderStats(issues) {
+  const total = issues.length;
+  const high = issues.filter(i => i.days >= 30).length;
+  const medium = issues.filter(i => i.days >= 7 && i.days < 30).length;
+  const low = issues.filter(i => i.days < 7).length;
+
+  document.getElementById('stats-row').innerHTML = `
+    <div class="stat-card">
+      <div class="stat-value">${total}</div>
+      <div class="stat-label">إجمالي التذاكر</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" style="color:var(--red)">${high}</div>
+      <div class="stat-label">أكثر من 30 يوم</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" style="color:var(--yellow)">${medium}</div>
+      <div class="stat-label">7 – 30 يوم</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" style="color:var(--green)">${low}</div>
+      <div class="stat-label">أقل من 7 أيام</div>
+    </div>
+  `;
+}
+
+// Load saved config
+window.onload = () => {
+  const saved = localStorage.getItem('jira_config');
+  if (saved) {
+    config = JSON.parse(saved);
+    document.getElementById('jira-url').value = config.url || '';
+    document.getElementById('jira-email').value = config.email || '';
+    document.getElementById('jira-token').value = config.token || '';
+    document.getElementById('jira-jql').value = config.jql || '';
+  }
+};
+</script>
+</body>
+</html>
